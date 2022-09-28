@@ -8,7 +8,7 @@ const opts = {
 }
 const companyInfoSchema = mongoose.Schema({
     name: String,
-    imageName: String,
+    logo: String,
     address: String,
     phone: Number,
     email: String,

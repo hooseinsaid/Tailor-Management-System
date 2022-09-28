@@ -1,9 +1,6 @@
 const express = require('express');
-const morgan = require('morgan');
 const AppError = require('./utils/appError')
-const helmet = require("helmet");
-const mongoSanitize = require("express-mongo-sanitize");
-const xss = require("xss-clean")
+
 
 const globalErrorHandler = require('./controllers/errorController')
 
@@ -13,33 +10,12 @@ const companyInfoRoutes = require("./routes/companyInfoRoutes");
 const orderRoutes = require("./routes/orderRoutes")
 const customerRoutes = require("./routes/customerRoutes");
 const transactionRoutes = require("./routes/transactionRoutes")
-
+const styleRoutes = require("./routes/styleRoutes");
+const menuRoutes = require("./routes/menuRoutes");
 const employeeTitleRoutes = require("./routes/employeeTitleRoutes");
+const fileRoutes = require("./routes/fileRoutes");
 
 const app = express();
-const cors = require('cors');
-
-app.use(cors({
-  origin: 'http://localhost:3000'
-}));
-
-// 1) MIDDLEWARES
-
-// Set security HTTP Headers
-app.use(helmet())
-
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-}
-
-app.use(express.json({ limit: '10kb' }));
-
-
-// Data sanitization against NoSQl query injection
-app.use(mongoSanitize());
-
-// Data sanitization agins xss
-app.use(xss())
 
 // 3) ROUTES
 
@@ -50,6 +26,9 @@ app.use('/api/v1/employee-titles', employeeTitleRoutes);
 app.use('/api/v1/customers', customerRoutes);
 app.use("/api/v1/orders", orderRoutes);
 app.use("/api/v1/transactions", transactionRoutes)
+app.use("/api/v1/styles", styleRoutes);
+app.use("/api/v1/menus", menuRoutes)
+app.use("/api/v1/files", fileRoutes)
 
 app.all('*', (req, res, next) => {
   next(new AppError(`cant't found ${req.originalUrl} on this server`, 404));

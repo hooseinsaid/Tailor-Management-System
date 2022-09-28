@@ -1,59 +1,48 @@
-// import
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-dotenv.config({ path: "./config.env" });
-const app = require("./app");
-const AppError = require("./utils/appError");
-const util = require("util");
+require("dotenv").config();
+const connection = require("./db");
+const express = require("express");
+var bodyParser = require('body-parser')
+const AppError = require('./utils/appError')
+const globalErrorHandler = require('./controllers/errorController')
+const userRoutes = require("./routes/userRoutes");
+const employeeRoutes = require("./routes/employeeRoutes")
+const companyInfoRoutes = require("./routes/companyInfoRoutes");
+const orderRoutes = require("./routes/orderRoutes")
+const customerRoutes = require("./routes/customerRoutes");
+const transactionRoutes = require("./routes/transactionRoutes")
+const styleRoutes = require("./routes/styleRoutes");
+const menuRoutes = require("./routes/menuRoutes");
+const employeeTitleRoutes = require("./routes/employeeTitleRoutes");
+const fileRoutes = require("./routes/fileRoutes");
+
+// express app
+const app = express();
+
+// database connection
+connection();
 
 
-// variables from enviroument variables
-const port = process.env.PORT || 80;
-const DB = process.env.DATABASE_NAME;
-const url = `${process.env.MONGO_URL}/${DB}`
-const user = process.env.DATABASE_USER;
-const pass = process.env.DATABASE_PASSWORD;
-const authSource = process.env.AUTHSOURCE;
+app.use(bodyParser());
+// 3) ROUTES
 
-// Check if Database Exists, if not throw error  
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/employees', employeeRoutes);
+app.use('/api/v1/companyInfo', companyInfoRoutes)
+app.use('/api/v1/employee-titles', employeeTitleRoutes);
+app.use('/api/v1/customers', customerRoutes);
+app.use("/api/v1/orders", orderRoutes);
+app.use("/api/v1/transactions", transactionRoutes)
+app.use("/api/v1/styles", styleRoutes);
+app.use("/api/v1/menus", menuRoutes)
+app.use("/api/v1/files", fileRoutes)
 
-const options = {
-  authSource,
-  user,
-  pass,
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}
 
-Admin = mongoose.mongo.Admin;
-var connection = mongoose.createConnection(url);
-connection.on('open', function () {
-  new Admin(connection.db).listDatabases(function (err, result) {
-    // if no database found in the configuration return error
-    if (!DB) {
-      throw new AppError("No conncetion Setting was found", 400)
-    }
-
-    // if the database name not found in the cloud, return error
-    var db = result.databases.filter((database) => database.name === DB);
-    if (db.length < 1) {
-      throw new AppError(`Database Connection Error, ${DB} was not found!`, 400)
-    }
-
-    // if all well, connect to mongdb instance with user and password
-    mongoose.connect(url, options).then((result) => {
-      console.log("DB connection successful!");
-    }).catch(err => {
-      console.log("Database Connection Error" + err)
-    });
-
-    // listen the server
-    app.listen(port, () => {
-      console.log(`App running on port ${port}...`);
-    });
-
-  });
+app.all('*', (req, res, next) => {
+    next(new AppError(`cant't found ${req.originalUrl} on this server`, 404));
 });
 
+app.use(globalErrorHandler);
 
-
+// listen Server
+const port = process.env.PORT || 80;
+app.listen(port, console.log(`Listening on port ${port}...`));
