@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+dotenv.config({ path: "./config.env" });
 
 // variables from enviroument variables
 const port = process.env.PORT || 80;
@@ -12,18 +14,17 @@ module.exports = async function connection() {
     try {
         const options = {
             authSource,
-            user,
-            pass,
             useNewUrlParser: true,
             useUnifiedTopology: true,
             useFindAndModify: false
         }
-        // if all well, connect to mongdb instance with user and password
-        mongoose.connect(url, options).then((result) => {
-            console.log("DB connection successful!");
+        // // if all well, connect to mongdb instance with user and password
+        mongoose.connect(url).then((result) => {
+            console.log(`successful Connected To ${DB}!`);
         }).catch(err => {
-            console.log("Database Connection Error" + err)
+            console.log("Database Connection Error" + err + ' Url : ' + url)
         });
+
     } catch (error) {
         console.log(error);
         console.log("could not connect to database");

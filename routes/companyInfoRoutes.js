@@ -7,7 +7,7 @@ const upload = require("../controllers/upload")
 router
     .route('/')
     .get(compnayInfoController.getCompanyInfo)
-    .patch(upload.single("logo"), compnayInfoController.updateCompanyInfo)
+    .patch(fileController.uploadLogo, compnayInfoController.updateCompanyInfo)
     .post(upload.single("logo"), compnayInfoController.createCompanyInfo);
 
 module.exports = router;

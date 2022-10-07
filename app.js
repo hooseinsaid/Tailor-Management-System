@@ -1,9 +1,7 @@
 const express = require('express');
+var bodyParser = require('body-parser')
 const AppError = require('./utils/appError')
-
-
 const globalErrorHandler = require('./controllers/errorController')
-
 const userRoutes = require("./routes/userRoutes");
 const employeeRoutes = require("./routes/employeeRoutes")
 const companyInfoRoutes = require("./routes/companyInfoRoutes");
@@ -18,6 +16,7 @@ const fileRoutes = require("./routes/fileRoutes");
 const app = express();
 
 // 3) ROUTES
+app.use(bodyParser());
 
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/employees', employeeRoutes);
