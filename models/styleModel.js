@@ -16,6 +16,10 @@ const styleSchema = mongoose.Schema({
     description: {
         type: String,
         required: true,
+    }, 
+    type: {
+        type: String,
+        required: true
     }
 }, opts);
 

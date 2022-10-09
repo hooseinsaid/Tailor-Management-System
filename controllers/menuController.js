@@ -89,14 +89,14 @@ exports.addImagesToMenu = catchAsync(async (req, res, next) => {
       }
       const files = req.files;
 
-      var menuProducts = [];
+      var menuProducts = menu.menuProducts;
 
       for (let index = 0; index < files.length; index++) {
             const imageName = files[0].filename;
             menuProducts.push(imageName);
       }
 
-      const updatedMenu = await Menu.findOneAndUpdate({}, { ...req.body, menuProducts }, {
+      updatedMenu = await Menu.findByIdAndUpdate(req.params.menuId, { ...req.body, menuProducts }, {
             new: true,
             runValidators: true,
       })

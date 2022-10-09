@@ -7,6 +7,59 @@ const opts = {
       }
 }
 
+const serviceSchema = mongoose.Schema( {
+      type: {
+            type: String,
+            required: true
+      },
+      quantity: {
+            type: Number,
+            required: true
+      },
+      unitPrice: {
+            type: Number,
+            required: true
+      },
+      subtotal: {
+            type: Number,
+            required: true,
+            default: function () {
+                  return this.quantity * this.unitPrice
+            }
+      },
+      sizes: {
+            L: Number,
+            P: Number,
+            M: Number,
+            S: Number,
+            K: Number,
+            C: Number,
+            T: Number
+      },
+      styles: [],
+      imageUrl: {
+            type: String,
+            required: true
+      }
+});
+
+serviceSchema.virtual('Hah').get(function () {
+      let serviceStyle = '';
+
+      for (let index = 0; index < this.styles.length; index++) {
+            const style = this.styles[index];
+            if (index == 0) {
+                  serviceStyle += style;
+            } else {
+                  serviceStyle += ` - ${style}`
+            }
+
+      }
+
+      console.log('Service Style ' + serviceStyle)
+      return "qor waxaan";
+});
+
 const orderSchema = mongoose.Schema({
       orderNumber: {
             type: Number,
@@ -14,41 +67,7 @@ const orderSchema = mongoose.Schema({
             required: true
       },
       services: [
-            {
-                  type: {
-                        type: String,
-                        required: true
-                  },
-                  quantity: {
-                        type: Number,
-                        required: true
-                  },
-                  unitPrice: {
-                        type: Number,
-                        required: true
-                  },
-                  subtotal: {
-                        type: Number,
-                        required: true,
-                        default: function () {
-                              return this.quantity * this.unitPrice
-                        }
-                  },
-                  sizes: {
-                        L: Number,
-                        P: Number,
-                        M: Number,
-                        S: Number,
-                        K: Number,
-                        C: Number,
-                        T: Number
-                  },
-                  styles: [],
-                  imageUrl: {
-                        type: String,
-                        required: true
-                  }
-            }
+            serviceSchema
       ],
       customer: {
             type: mongoose.Schema.Types.ObjectId,
@@ -104,7 +123,7 @@ const orderSchema = mongoose.Schema({
                   },
             }
       ]
-},opts);
+}, opts);
 
 // create a virtual property `Ref` that's computed from `orderNumber`
 orderSchema.virtual('Ref').get(function () {
@@ -126,6 +145,24 @@ orderSchema.virtual('balance').get(function () {
             price -= payment.amount
       });
       return price;
+});
+
+// create a virtual property `name` that's computed from `services type`
+orderSchema.virtual('name').get(function () {
+      let type = '';
+
+      for (let index = 0; index < this.services.length; index++) {
+            const service = this.services[index];
+            if (index == 0) {
+                  type += service.type;
+            } else if (index != this.services.length - 1) {
+                  type += ` ${service.type}`
+            } else {
+                  type += ` & ${service.type}`
+            }
+
+      }
+      return type;
 });
 
 // auto generate Order ID
