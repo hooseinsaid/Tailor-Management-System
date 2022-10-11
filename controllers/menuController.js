@@ -92,7 +92,7 @@ exports.addImagesToMenu = catchAsync(async (req, res, next) => {
       var menuProducts = menu.menuProducts;
 
       for (let index = 0; index < files.length; index++) {
-            const imageName = files[0].filename;
+            const imageName = files[index].filename;
             menuProducts.push(imageName);
       }
 
