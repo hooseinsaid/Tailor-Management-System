@@ -6,7 +6,7 @@ const AppError = require("../utils/appError");
 const APIFeatures = require("../utils/apiFeatures")
 
 exports.getAllOrders = catchAsync(async (req, res, next) => {
-    const features = new APIFeatures(Order.find().populate('customer'), req.query).filter().sort().limitFields().paginate()
+    const features = new APIFeatures(Order.find({status: "pending"}).populate('customer'), req.query).filter().sort().limitFields().paginate()
     const orders = await features.query;
     res.status(200).json({
         message: "Sucess",
@@ -18,7 +18,7 @@ exports.getAllOrders = catchAsync(async (req, res, next) => {
 });
 
 exports.getOrder = catchAsync(async (req, res, next) => {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id, {status: "pending"});
     res.status(200).json({
         message: "Sucess",
         data: {
@@ -104,9 +104,10 @@ exports.invoiceOrderToCustomer = catchAsync(async (req, res, next) => {
 });
 
 exports.assignOrderToUser = catchAsync(async (req, res, next) => {
-    const order = await Order.findById(req.params.ordrId);
+    const order = await Order.findById(req.params.orderId);
     const user = await User.findById(req.params.userId);
     
+
     if (!order) {
         return next(new AppError("no order found with that ID", 404));
     }
@@ -114,8 +115,7 @@ exports.assignOrderToUser = catchAsync(async (req, res, next) => {
         return next(new AppError("no user found with that ID", 404));
     }
 
-    order.servedUser = user._id;
-    await order.save();
+    await Order.findByIdAndUpdate(req.params.orderId, {servedUser:user._id, status: 'on-service' });
 
     
     res.status(200).json({
@@ -133,7 +133,6 @@ exports.finishOrder = catchAsync(async (req, res, next) => {
         return next(new AppError("no order found with that ID", 404));
     }
 
-
     order.status = 'finished';
     await order.save();
 
@@ -145,6 +144,15 @@ exports.finishOrder = catchAsync(async (req, res, next) => {
         },
     });
 });
+
+exports.getOnServiceOrdersByUser = catchAsync(async(req,res,next)=>{
+    const orders = await Order.find({servedUser: req.params.userId, status: "on-service"});
+
+    res.json({
+        status: "success",
+        orders,
+    })
+})
 
 
 

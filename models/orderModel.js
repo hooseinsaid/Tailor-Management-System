@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
-const JustDate = require("../utils/justDate")
+const JustDate = require("../utils/justDate");
+const moment = require('moment');
+
 const opts = {
       toJSON: { virtuals: true }, toObject: { virtuals: true }, timestamps: {
             createdAt: 'created_at',
@@ -28,13 +30,13 @@ const serviceSchema = mongoose.Schema( {
             }
       },
       sizes: {
-            L: Number,
-            P: Number,
-            M: Number,
-            S: Number,
-            K: Number,
-            C: Number,
-            T: Number
+            l: Number,
+            p: Number,
+            m: Number,
+            s: Number,
+            k: Number,
+            c: Number,
+            t: Number
       },
       styles: [],
       imageUrl: {

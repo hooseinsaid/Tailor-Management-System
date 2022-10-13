@@ -1,6 +1,12 @@
 const connection = require("./utils/connection");
 const app = require('./app')
+const cors = require('cors')
 
+app.use(
+      cors({
+        origin: "http://localhost:3000",
+      })
+    );
 // database connection
 connection();
 

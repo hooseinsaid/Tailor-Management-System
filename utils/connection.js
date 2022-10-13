@@ -19,7 +19,7 @@ module.exports = async function connection() {
             useFindAndModify: false
         }
         // // if all well, connect to mongdb instance with user and password
-        mongoose.connect(url, options).then((result) => {
+        mongoose.connect(url).then((result) => {
             console.log(`successful Connected To ${DB}!`);
         }).catch(err => {
             console.log("Database Connection Error" + err + ' Url : ' + url)

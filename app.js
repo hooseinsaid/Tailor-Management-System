@@ -12,8 +12,16 @@ const styleRoutes = require("./routes/styleRoutes");
 const menuRoutes = require("./routes/menuRoutes");
 const employeeTitleRoutes = require("./routes/employeeTitleRoutes");
 const fileRoutes = require("./routes/fileRoutes");
+const cors = require('cors')
 
 const app = express();
+
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+  })
+);
+
 
 // 3) ROUTES
 app.use(bodyParser());
