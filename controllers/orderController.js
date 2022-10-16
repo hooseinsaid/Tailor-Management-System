@@ -53,6 +53,28 @@ exports.getFinishedOrders = catchAsync(async (req, res, next) => {
         },
     });
 });
+
+exports.takeOrder = catchAsync(async (req, res, next) => {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+        return next(new AppError("no order found with that ID", 404));
+    }
+
+    await Order.findByIdAndUpdate(req.params.id,  { ...req.body, status: 'taken' }, {
+        new: true,
+        runValidators: true,
+    });
+
+
+    res.status(200).json({
+        status: "success",
+        data: {
+            message: `succesfully taken `
+        },
+    });
+});
+
 exports.getOrder = catchAsync(async (req, res, next) => {
     const order = await Order.findById(req.params.id, { status: "pending" });
     res.status(200).json({
@@ -127,9 +149,10 @@ exports.invoiceOrderToCustomer = catchAsync(async (req, res, next) => {
         customer: order.customer
     });
 
-    order.status = 'invoiced';
-    await order.save();
-
+    await Order.findByIdAndUpdate(req.params.id,  { ...req.body, status: 'invoiced' }, {
+        new: true,
+        runValidators: true,
+    });
 
     res.status(200).json({
         status: "success",
@@ -169,8 +192,10 @@ exports.finishOrder = catchAsync(async (req, res, next) => {
         return next(new AppError("no order found with that ID", 404));
     }
 
-    order.status = 'finished';
-    await order.save();
+    await Order.findByIdAndUpdate(req.params.id,  { ...req.body, status: 'finished' }, {
+        new: true,
+        runValidators: true,
+    });
 
 
     res.status(200).json({
