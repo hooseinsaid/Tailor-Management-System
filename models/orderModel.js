@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const JustDate = require("../utils/justDate");
-const moment = require('moment');
+
+const justDate = require("../utils/justDate");
 
 const opts = {
       toJSON: { virtuals: true }, toObject: { virtuals: true }, timestamps: {
@@ -29,37 +29,17 @@ const serviceSchema = mongoose.Schema( {
                   return this.quantity * this.unitPrice
             }
       },
-      sizes: {
-            l: Number,
-            p: Number,
-            m: Number,
-            s: Number,
-            k: Number,
-            c: Number,
-            t: Number
-      },
+      sizes: [
+            {
+                  title: String,
+                  value: Number
+            }
+      ],
       styles: [],
       imageUrl: {
             type: String,
             required: true
       }
-});
-
-serviceSchema.virtual('Hah').get(function () {
-      let serviceStyle = '';
-
-      for (let index = 0; index < this.styles.length; index++) {
-            const style = this.styles[index];
-            if (index == 0) {
-                  serviceStyle += style;
-            } else {
-                  serviceStyle += ` - ${style}`
-            }
-
-      }
-
-      console.log('Service Style ' + serviceStyle)
-      return "qor waxaan";
 });
 
 const orderSchema = mongoose.Schema({
@@ -94,8 +74,13 @@ const orderSchema = mongoose.Schema({
       deadline: {
             type: Date,
             // required: true,
-            default: JustDate(new Date())
+            default: justDate(new Date())
       },
+      date: {
+            type: Date,
+            required: true,
+            default: justDate(new Date()),
+        },
       status: {
             type: String,
             lowercase: true,
