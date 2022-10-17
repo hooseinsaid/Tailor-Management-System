@@ -31,8 +31,14 @@ const serviceSchema = mongoose.Schema( {
       },
       sizes: [
             {
-                  title: String,
-                  value: Number
+                  title: {
+                        type: String,
+                        
+                  },
+                  value: {
+                        type: Number,
+                  
+                  }
             }
       ],
       styles: [],
@@ -122,7 +128,7 @@ orderSchema.virtual('Ref').get(function () {
       } else {
             number = this.orderNumber
       }
-      return `ORDER-${number}`;
+      return `ORD-${number}`;
 });
 
 // create a virtual property `balance` that's computed from `total` & `payments`

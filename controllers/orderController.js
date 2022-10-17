@@ -217,6 +217,10 @@ exports.assignOrderToUser = catchAsync(async (req, res, next) => {
         return next(new AppError("no user found with that ID", 404));
     }
 
+    if(order.status!=='pending'){
+        return next(new AppError("This is not Pending Order"))
+    }
+
     await Order.findByIdAndUpdate(req.params.orderId, { servedUser: user._id, status: 'on-service' });
 
 
