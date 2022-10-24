@@ -12,6 +12,7 @@ const styleRoutes = require("./routes/styleRoutes");
 const menuRoutes = require("./routes/menuRoutes");
 const employeeTitleRoutes = require("./routes/employeeTitleRoutes");
 const fileRoutes = require("./routes/fileRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 const cors = require('cors')
 
 const app = express();
@@ -35,7 +36,8 @@ app.use("/api/v1/orders", orderRoutes);
 app.use("/api/v1/transactions", transactionRoutes)
 app.use("/api/v1/styles", styleRoutes);
 app.use("/api/v1/menus", menuRoutes)
-app.use("/api/v1/files", fileRoutes)
+app.use("/api/v1/files", fileRoutes);
+app.use("/api/v1/dashboard", dashboardRoutes)
 
 app.all('*', (req, res, next) => {
   next(new AppError(`cant't found ${req.originalUrl} on this server`, 404));

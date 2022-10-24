@@ -37,7 +37,7 @@ exports.createStyle = catchAsync(async (req, res, next) => {
 });
 
 exports.updateStyle = catchAsync(async (req, res, next) => {
-  const updatedStyle = await Style.findOneAndUpdate({}, req.body, {
+  const updatedStyle = await Style.findOneAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   })
