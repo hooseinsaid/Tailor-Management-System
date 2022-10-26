@@ -50,7 +50,6 @@ const transactionSchema = mongoose.Schema({
     }
 }, opts);
 
-
 transactionSchema.pre("save", async function (next) {
     //sorting transactions
     const transactions = await Transaction.find({}).sort([["transactionId", -1]]);

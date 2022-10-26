@@ -7,7 +7,7 @@ const APIFeatures = require("../utils/apiFeatures")
 const justDate = require("../utils/justDate");
 
 exports.getAllOrders = catchAsync(async (req, res, next) => {
-    const features = new APIFeatures(Order.find().populate('customer'), req.query).filter().sort().limitFields().paginate()
+    const features = new APIFeatures(Order.find({status: {$ne: "cancelled"}}).populate('customer'), req.query).filter().sort().limitFields().paginate()
     const orders = await features.query;
     res.status(200).json({
         message: "Sucess",
@@ -54,6 +54,18 @@ exports.getFinishedOrders = catchAsync(async (req, res, next) => {
     });
 });
 
+exports.getCancelledOrders = catchAsync(async (req, res, next) => {
+    const features = new APIFeatures(Order.find({ status: "cancelled" }).populate('customer'), req.query).filter().sort().limitFields().paginate()
+    const orders = await features.query;
+    res.status(200).json({
+        message: "Sucess",
+        count: orders.length,
+        data: {
+            orders,
+        },
+    });
+});
+
 exports.takeOrder = catchAsync(async (req, res, next) => {
     const order = await Order.findById(req.params.id);
 
@@ -80,6 +92,28 @@ exports.takeOrder = catchAsync(async (req, res, next) => {
         status: "success",
         data: {
             message: `succesfully taken `
+        },
+    });
+});
+
+exports.cancelOrder = catchAsync(async (req, res, next) => {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+        return next(new AppError("no order found with that ID", 404));
+    }
+
+
+    await Order.findByIdAndUpdate(req.params.id, { ...req.body, status: 'cancelled' }, {
+        new: true,
+        runValidators: true,
+    });
+
+
+    res.status(200).json({
+        status: "success",
+        data: {
+            message: `Order Succesfully Cancelled `
         },
     });
 });
@@ -192,7 +226,14 @@ exports.invoiceOrderToCustomer = catchAsync(async (req, res, next) => {
         customer: order.customer
     });
 
-    await Order.findByIdAndUpdate(req.params.id, { ...req.body, status: 'invoiced' }, {
+    var payments = order.payments;
+
+    payments.push({
+        description: "Invoiced",
+        amount: order.balance
+    })
+
+    await Order.findByIdAndUpdate(req.params.id, { ...order, status: 'invoiced', payments: payments}, {
         new: true,
         runValidators: true,
     });

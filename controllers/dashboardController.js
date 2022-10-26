@@ -15,7 +15,7 @@ exports.defaultDashboard = catchAsync(async (req, res, next) => {
 
   // ====== Variables ==============
 
-  const orders = await Order.find();
+  const orders = await Order.find({ status: { $ne: "cancelled" } });
   const menus = await Menu.find();
   const customers = await Customer.find();
   const today = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`;
@@ -37,15 +37,15 @@ exports.defaultDashboard = catchAsync(async (req, res, next) => {
 
   // ====== Revenu Stats ==============
 
-  const revenueStats = await generateRevenuStats(orders);
+  const revenueStats = await generateRevenuStats(today);
 
   // ====== Orders By Employee ==============
 
-  const ordersByEmployee = await generateOrdersByEmployee(today, firstDayOftheMonth);
+  const top5Employees = await generateTop5ServerdEmployees(today, firstDayOftheMonth);
 
   // ====== This Month Total Orders ==============
 
-  const thisMonthOrders = await Order.find({ date: { $gte: firstDayOftheMonth, $lte: today } }).count();
+  const thisMonthOrders = await Order.find({ status: { $ne: "cancelled" }, date: { $gte: firstDayOftheMonth, $lte: today }, }).count();
 
   // ====== Top 5 Customers ==============
 
@@ -55,7 +55,7 @@ exports.defaultDashboard = catchAsync(async (req, res, next) => {
   res.status(200).json({
     message: "Sucess",
     data: {
-      
+
       dashboard: {
         summary: dashboard,
         weekly: {
@@ -64,7 +64,7 @@ exports.defaultDashboard = catchAsync(async (req, res, next) => {
           revenueStats,
         },
         monthly: {
-          EmployeeOrders: ordersByEmployee,
+          top5Employees,
           thisMonthOrders,
           recievable: dashboard[1].value,
           revenue: dashboard[7].value
@@ -77,7 +77,6 @@ exports.defaultDashboard = catchAsync(async (req, res, next) => {
   });
 
 });
-
 
 
 const generateTotal = (list, field = "balance") => {
@@ -207,23 +206,21 @@ const generateDefaultDashboard = async (orders, menus, customers) => {
   ]
 }
 
-const generateRevenuStats = async (orders) => {
+const generateRevenuStats = async (today) => {
+  const orders = await Order.find({ date: today });
   var advancedMoney = 0;
-  var payedMoney = 0;
   var ownedMoney = 0;
   var estimatedPorfit = 0;
 
   for (let index = 0; index < orders.length; index++) {
     const order = orders[index];
     advancedMoney += order.advance;
-    payedMoney += order.total - order.balance;
     ownedMoney += order.balance;
     estimatedPorfit += order.total
   }
 
   return {
     advancedMoney,
-    payedMoney,
     ownedMoney,
     estimatedPorfit
   }
@@ -234,7 +231,7 @@ const generateOrderByStatus = async () => {
     // First Stage
     {
       // $match: { "date": new Date(today) }
-      $match: {}
+      $match: {"status": {$ne: "cancelled"}}
     },
     // Second Stage
     {
@@ -260,11 +257,12 @@ const generateOrderByStatus = async () => {
   ]);
 }
 
-const generateOrdersByEmployee = async (today, firstDayOftheMonth) => {
+const generateTop5ServerdEmployees = async (today, firstDayOftheMonth) => {
   return await Order.aggregate([
     {
       $match: {
         "date": { $lte: new Date(today), $gte: new Date(firstDayOftheMonth) },
+        "status": {$ne: "cancelled"},
         "servedUser": {
           "$nin": [null, ""]
         },
@@ -289,8 +287,8 @@ const generateOrdersByEmployee = async (today, firstDayOftheMonth) => {
       $sort: { count: -1 }
     },
 
-    // { $sort: { amount: -1 } },
-    // { $limit: 5 },
+    { $sort: { amount: -1 } },
+    { $limit: 5 },
   ])
 }
 

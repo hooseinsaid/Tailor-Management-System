@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const justDate = require("../utils/justDate");
-const moment = require("moment");
+
 const opts = {
       toJSON: { virtuals: true }, toObject: { virtuals: true }, timestamps: {
             createdAt: 'created_at',
@@ -91,7 +91,7 @@ const orderSchema = mongoose.Schema({
             type: String,
             lowercase: true,
             default: "pending",
-            enum: ["pending", "on-service", "finished", "taken", "invoiced"]
+            enum: ["pending", "on-service", "finished", "taken", "invoiced", "cancelled"]
       },
       user: {
             type: String,
@@ -114,12 +114,13 @@ const orderSchema = mongoose.Schema({
                   user: {
                         type: String
                   },
+                  date: {
+                        type: Date,
+                        required: true,
+                        default: justDate(new Date()),
+                  }
             }
-      ],
-      orderDay : {
-            default: moment(this.createdAt).format('dddd'),
-            type: String
-      }
+      ]
 }, opts);
 
 // create a virtual property `Ref` that's computed from `orderNumber`
