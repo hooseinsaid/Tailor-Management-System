@@ -5,7 +5,6 @@ const Menu = require("../models/menuModel")
 const catchAsync = require("../utils/catchAsync");
 const Order = require("../models/orderModel");
 const APIFeatures = require("../utils/apiFeatures")
-const getFisrtDayOfTheWeek = require("../utils/getFirstDayOfTheWeek")
 
 
 
@@ -19,9 +18,8 @@ exports.defaultDashboard = catchAsync(async (req, res, next) => {
   const menus = await Menu.find();
   const customers = await Customer.find();
   const today = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`;
-  const firstDayOftheWeek = getFisrtDayOfTheWeek(today);
   const firstDayOftheMonth = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${1}`;
-
+  const firstDayOftheLast7Days = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate() - 6}`;
 
   // ====== Default Dashboard ==============
 
@@ -29,7 +27,7 @@ exports.defaultDashboard = catchAsync(async (req, res, next) => {
 
   // ====== weekly Statics ==============
 
-  const WeeklyOrdersByDays = await generateWeeklyOrders(today, firstDayOftheWeek);
+  const WeeklyOrdersByDays = await generateWeeklyOrders(today, firstDayOftheLast7Days);
 
   // ====== Today Order Updates ==============
 
@@ -51,11 +49,11 @@ exports.defaultDashboard = catchAsync(async (req, res, next) => {
 
   const top5Customers = await generateTop5Customers();
 
+  const top5CustomersByOrder = await generateTop5OrderedCustomers(today, firstDayOftheMonth);
 
   res.status(200).json({
     message: "Sucess",
     data: {
-
       dashboard: {
         summary: dashboard,
         weekly: {
@@ -70,7 +68,8 @@ exports.defaultDashboard = catchAsync(async (req, res, next) => {
           revenue: dashboard[7].value
         },
         other: {
-          top5Customers
+          top5Customers,
+          top5CustomersByOrder
         }
       }
     },
@@ -93,18 +92,17 @@ const generateTotal = (list, field = "balance") => {
   return total;
 };
 
-const generateWeeklyOrders = async (today, firstDayOftheWeek) => {
+const generateWeeklyOrders = async (today, firstDayOftheLast7Days) => {
   const thisweekOrders = await Order.aggregate([
     // First Stage
     {
-      $match: { "date": { $lte: new Date(today), $gte: new Date(firstDayOftheWeek) } }
+      $match: { "date": { $lte: new Date(today), $gte: new Date(firstDayOftheLast7Days) } }
 
     },
     // Second Stage
     {
       $group: {
         _id: '$date',
-
         amount: { $sum: "$total" },
         count: { $sum: 1 },
       }
@@ -112,11 +110,25 @@ const generateWeeklyOrders = async (today, firstDayOftheWeek) => {
 
     // Third Stage
     {
-      $sort: { count: -1 }
+      $sort: { _id: 1 }
     }
   ])
+  // const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  // for (let index = 0; index < thisweekOrders.length; index++) {
+  //   const day = thisweekOrders[index];
+  //   const dayIndex = day._id.getDay();
+  //   thisweekOrders[index] = {
+  //     day : days[dayIndex],
+  //     orders : day.count,
+  //     date : day._id
+  //   }
+  // }
 
   const days = [
+    {
+      day: "SAT",
+      orders: 0
+    },
     {
       day: "SUN",
       orders: 0
@@ -141,20 +153,18 @@ const generateWeeklyOrders = async (today, firstDayOftheWeek) => {
       day: "Friday",
       orders: 0
     },
-    {
-      day: "SAT",
-      orders: 0
-    },
+    
   ];
 
   for (let index = 0; index < thisweekOrders.length; index++) {
     const day = thisweekOrders[index];
-    days[day._id.getDay()] = {
-      ...days[day._id.getDay()],
-      orders: day.count
+    const dayIndex = day._id.getDay() == 6 ? 0 : day._id.getDay() + 1
+    days[dayIndex] = {
+      ...days[dayIndex],
+      orders: day.count,
+      date : day._id
     }
   }
-
   return days;
 }
 
@@ -197,7 +207,7 @@ const generateDefaultDashboard = async (orders, menus, customers) => {
   return [
     { label: "Customers", value: customers.length, isMoney: false },
     { label: "Recievable", value: recievable, isMoney: true },
-    { label: "Products", value: menuProducts, isMoney: true },
+    { label: "Products", value: menuProducts, isMoney: false },
     { label: "Employee", value: employees, isMoney: false },
     { label: "Users", value: users, isMoney: false },
     { label: "Menus", value: menusLength, isMoney: false },
@@ -210,19 +220,22 @@ const generateRevenuStats = async (today) => {
   const orders = await Order.find({ date: today });
   var advancedMoney = 0;
   var ownedMoney = 0;
+  var payedMoney = 0;
   var estimatedPorfit = 0;
 
   for (let index = 0; index < orders.length; index++) {
     const order = orders[index];
     advancedMoney += order.advance;
     ownedMoney += order.balance;
-    estimatedPorfit += order.total
+    estimatedPorfit += order.total;
+    payedMoney += order.total - order.balance - advancedMoney;
   }
 
   return {
     advancedMoney,
     ownedMoney,
-    estimatedPorfit
+    estimatedPorfit,
+    payedMoney
   }
 };
 
@@ -231,7 +244,7 @@ const generateOrderByStatus = async () => {
     // First Stage
     {
       // $match: { "date": new Date(today) }
-      $match: {"status": {$ne: "cancelled"}}
+      $match: { "status": { $ne: "cancelled" } }
     },
     // Second Stage
     {
@@ -262,7 +275,7 @@ const generateTop5ServerdEmployees = async (today, firstDayOftheMonth) => {
     {
       $match: {
         "date": { $lte: new Date(today), $gte: new Date(firstDayOftheMonth) },
-        "status": {$ne: "cancelled"},
+        "status": { $ne: "cancelled" },
         "servedUser": {
           "$nin": [null, ""]
         },
@@ -284,10 +297,38 @@ const generateTop5ServerdEmployees = async (today, firstDayOftheMonth) => {
     },
 
     {
-      $sort: { count: -1 }
+      $sort: { amount: 1 }
     },
 
-    { $sort: { amount: -1 } },
+    { $limit: 5 },
+  ])
+}
+
+const generateTop5OrderedCustomers = async (today, firstDayOftheMonth) => {
+  return await Order.aggregate([
+    {
+      $match: {
+        "date": { $lte: new Date(today), $gte: new Date(firstDayOftheMonth) },
+        "status": { $ne: "cancelled" },
+      }
+
+    },
+    { $lookup: { from: 'customers', localField: 'customer', foreignField: '_id', as: 'theCustomer' } },
+    { $unwind: "$theCustomer" },
+
+    {
+      $group: {
+        _id: '$customer',
+        username: { $first: "$theCustomer.name" },
+        orders: { $sum: 1 },
+      }
+    },
+
+    {
+      $sort: { orders: 1 }
+    },
+
+
     { $limit: 5 },
   ])
 }

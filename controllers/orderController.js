@@ -7,7 +7,30 @@ const APIFeatures = require("../utils/apiFeatures")
 const justDate = require("../utils/justDate");
 
 exports.getAllOrders = catchAsync(async (req, res, next) => {
-    const features = new APIFeatures(Order.find({status: {$ne: "cancelled"}}).populate('customer'), req.query).filter().sort().limitFields().paginate()
+    const features = new APIFeatures(Order.find({ status: { $ne: "cancelled" } }).populate('customer'), req.query).filter().sort().limitFields().paginate()
+    const orders = await features.query;
+    res.status(200).json({
+        message: "Sucess",
+        count: orders.length,
+        data: {
+            orders,
+        },
+    });
+});
+
+
+exports.getOrdersByDate = catchAsync(async (req, res, next) => {
+    const startDate = `${new Date(req.params.startDate).getFullYear()}-${new Date(req.params.startDate).getMonth() + 1}-${new Date(req.params.startDate).getDate()}`;
+    const endDate = `${new Date(req.params.endDate).getFullYear()}-${new Date(req.params.endDate).getMonth() + 1}-${new Date(req.params.endDate).getDate()}`;
+
+    const features = new APIFeatures(Order.find({
+        date: {
+            $lte: new Date(endDate),
+            $gte: new Date(startDate),
+        },
+        status: { $ne: "cancelled" }
+    }).populate('customer'), req.query).filter().sort().limitFields().paginate();
+
     const orders = await features.query;
     res.status(200).json({
         message: "Sucess",
@@ -193,7 +216,7 @@ exports.payBill = catchAsync(async (req, res, next) => {
         amount: amount
     })
 
-    await Order.findByIdAndUpdate(req.params.orderId,  { ...req.body, payments: payments }, {
+    await Order.findByIdAndUpdate(req.params.orderId, { ...req.body, payments: payments }, {
         new: true,
         runValidators: true,
     });
@@ -223,7 +246,9 @@ exports.invoiceOrderToCustomer = catchAsync(async (req, res, next) => {
         description: `Customer Invoice Order#${order.orderNumber}`,
         debit: order.balance,
         transactionType: "charge",
-        customer: order.customer
+        customer: order.customer,
+        user: req.params.user,
+
     });
 
     var payments = order.payments;
@@ -233,7 +258,7 @@ exports.invoiceOrderToCustomer = catchAsync(async (req, res, next) => {
         amount: order.balance
     })
 
-    await Order.findByIdAndUpdate(req.params.id, { ...order, status: 'invoiced', payments: payments}, {
+    await Order.findByIdAndUpdate(req.params.id, { ...order, status: 'invoiced', payments: payments }, {
         new: true,
         runValidators: true,
     });
@@ -258,7 +283,7 @@ exports.assignOrderToUser = catchAsync(async (req, res, next) => {
         return next(new AppError("no user found with that ID", 404));
     }
 
-    if(order.status!=='pending'){
+    if (order.status !== 'pending') {
         return next(new AppError("This is not Pending Order"))
     }
 

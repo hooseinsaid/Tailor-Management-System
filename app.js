@@ -39,6 +39,15 @@ app.use("/api/v1/menus", menuRoutes)
 app.use("/api/v1/files", fileRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes)
 
+app.get("/api/v1/test", (req,res,next)=>{
+  res.status(200).json({
+    message : "success",
+    data: {
+      isOn: true,
+      test: "scucessfully tested"
+    }
+  })
+})
 app.all('*', (req, res, next) => {
   next(new AppError(`cant't found ${req.originalUrl} on this server`, 404));
 });

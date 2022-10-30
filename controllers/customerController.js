@@ -41,7 +41,23 @@ exports.getCustomersWithTransactions = catchAsync(async (req, res, next) => {
         },
     ]);
 
-   
+    var debit = 0;
+    var credit = 0;
+    customers.forEach(customer => {
+        for (let index = 0; index < customer.transactions.length; index++) {
+            const transaction = customer.transactions[index];
+            debit += transaction.debit;
+            credit += transaction.credit;
+            const balance = debit - credit;
+            customer.transactions[index] = {
+                ...transaction,
+                balance
+            }
+        };
+        debit = 0;
+        credit = 0;
+    });
+
     res.status(200).json({
         message: "Sucess",
         count: customers.length,

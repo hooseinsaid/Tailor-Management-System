@@ -91,7 +91,7 @@ const orderSchema = mongoose.Schema({
             type: String,
             lowercase: true,
             default: "pending",
-            enum: ["pending", "on-service", "finished", "taken", "invoiced", "cancelled"]
+            enum: ["pending", "on-service", "finished", "taken", "invoiced", "cancelled", "left"]
       },
       user: {
             type: String,
