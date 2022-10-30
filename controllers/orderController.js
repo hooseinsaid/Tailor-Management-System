@@ -18,7 +18,6 @@ exports.getAllOrders = catchAsync(async (req, res, next) => {
     });
 });
 
-
 exports.getOrdersByDate = catchAsync(async (req, res, next) => {
     const startDate = `${new Date(req.params.startDate).getFullYear()}-${new Date(req.params.startDate).getMonth() + 1}-${new Date(req.params.startDate).getDate()}`;
     const endDate = `${new Date(req.params.endDate).getFullYear()}-${new Date(req.params.endDate).getMonth() + 1}-${new Date(req.params.endDate).getDate()}`;
