@@ -96,7 +96,13 @@ const generateWeeklyOrders = async (today, firstDayOftheLast7Days) => {
   const thisweekOrders = await Order.aggregate([
     // First Stage
     {
-      $match: { "date": { $lte: new Date(today), $gte: new Date(firstDayOftheLast7Days), status: { $ne: "cancelled" } } }
+      $match: {
+        date: {
+          $lte: new Date(today),
+          $gte: new Date(firstDayOftheLast7Days)
+        },
+        status: { $ne: "cancelled" }
+      }
 
     },
     // Second Stage
@@ -143,7 +149,7 @@ const generateWeeklyOrders = async (today, firstDayOftheLast7Days) => {
       day: "Friday",
       orders: 0
     },
-    
+
   ];
 
   for (let index = 0; index < thisweekOrders.length; index++) {
@@ -152,7 +158,7 @@ const generateWeeklyOrders = async (today, firstDayOftheLast7Days) => {
     days[dayIndex] = {
       ...days[dayIndex],
       orders: day.count,
-      date : day._id
+      date: day._id
     }
   }
   return days;
@@ -207,7 +213,7 @@ const generateDefaultDashboard = async (orders, menus, customers) => {
 }
 
 const generateRevenuStats = async (today) => {
-  const orders = await Order.find({ date: today , status: { $ne: "cancelled" }});
+  const orders = await Order.find({ date: today, status: { $ne: "cancelled" } });
   var advancedMoney = 0;
   var ownedMoney = 0;
   var payedMoney = 0;
