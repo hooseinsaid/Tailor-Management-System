@@ -7,7 +7,7 @@ const APIFeatures = require("../utils/apiFeatures")
 const justDate = require("../utils/justDate");
 
 exports.getAllOrders = catchAsync(async (req, res, next) => {
-    const features = new APIFeatures(Order.find({ status: { $ne: "cancelled" } }).populate('customer'), req.query).filter().sort().limitFields().paginate()
+    const features = new APIFeatures(Order.find({ status: { $ne: "cancelled" } }).populate('customer').populate('servedUser'), req.query).filter().sort().limitFields().paginate()
     const orders = await features.query;
     res.status(200).json({
         message: "Sucess",

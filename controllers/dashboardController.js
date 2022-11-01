@@ -7,8 +7,6 @@ const Order = require("../models/orderModel");
 const APIFeatures = require("../utils/apiFeatures")
 
 
-
-
 exports.defaultDashboard = catchAsync(async (req, res, next) => {
 
 
@@ -17,8 +15,12 @@ exports.defaultDashboard = catchAsync(async (req, res, next) => {
   const orders = await Order.find({ status: { $ne: "cancelled" } });
   const menus = await Menu.find();
   const customers = await Customer.find();
-  const today = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`;
-  const firstDayOftheMonth = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${1}`;
+  const year = new Date().getFullYear();
+  const month = new Date().getMonth() + 1;
+  const day = new Date().getDate() < 10 ? `0${new Date().getDate()}` : new Date().getDate();
+
+  const today = `${year}-${month}-${day}`;
+  const firstDayOftheMonth = `${year}-${month}-01`;
   const firstDayOftheLast7Days = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate() - 6}`;
 
   // ====== Default Dashboard ==============
@@ -76,7 +78,6 @@ exports.defaultDashboard = catchAsync(async (req, res, next) => {
   });
 
 });
-
 
 const generateTotal = (list, field = "balance") => {
   let total = 0;
@@ -194,7 +195,7 @@ const generateDefaultDashboard = async (orders, menus, customers) => {
 
   const employees = await Employee.count();
   const menusLength = await Menu.count();
-  const ordersLength = await Order.count();
+  const ordersLength = orders.length;
   const users = await User.count();
 
   const recievable = generateTotal(customerTransactions);
@@ -293,7 +294,7 @@ const generateTop5ServerdEmployees = async (today, firstDayOftheMonth) => {
     },
 
     {
-      $sort: { amount: 1 }
+      $sort: { amount: -1 }
     },
 
     { $limit: 5 },
@@ -301,7 +302,8 @@ const generateTop5ServerdEmployees = async (today, firstDayOftheMonth) => {
 }
 
 const generateTop5OrderedCustomers = async (today, firstDayOftheMonth) => {
-  return await Order.aggregate([
+  
+  const top5OrderedCustomers = await Order.aggregate([
     {
       $match: {
         "date": { $lte: new Date(today), $gte: new Date(firstDayOftheMonth) },
@@ -309,7 +311,14 @@ const generateTop5OrderedCustomers = async (today, firstDayOftheMonth) => {
       }
 
     },
-    { $lookup: { from: 'customers', localField: 'customer', foreignField: '_id', as: 'theCustomer' } },
+    {
+      $lookup: {
+        from: 'customers',
+        localField: 'customer',
+        foreignField: '_id',
+        as: 'theCustomer'
+      }
+    },
     { $unwind: "$theCustomer" },
 
     {
@@ -321,12 +330,14 @@ const generateTop5OrderedCustomers = async (today, firstDayOftheMonth) => {
     },
 
     {
-      $sort: { orders: 1 }
+      $sort: { orders: -1 }
     },
 
 
     { $limit: 5 },
-  ])
+  ]);
+
+  return top5OrderedCustomers;
 }
 
 const generateTop5Customers = async () => {
@@ -351,4 +362,4 @@ const generateTop5Customers = async () => {
     { $sort: { balance: -1 } },
     { $limit: 5 },
   ]);
-}
+} 

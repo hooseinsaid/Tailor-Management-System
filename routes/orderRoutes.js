@@ -13,7 +13,7 @@ router.route('/on-service-orders-by-user/:userId').get(orderController.getOnServ
 router.route('/pending-orders').get(orderController.getPendingOrders);
 router.route('/on-service-orders').get(orderController.getOnServiceOrders);
 router.route('/finished-orders').get(orderController.getFinishedOrders);
-router.route('/cancelled-orders/cancelled-orders').get(orderController.getCancelledOrders);
+router.route('/cancelled-orders').get(orderController.getCancelledOrders);
 router.route('/payment/:orderId/:amount').post(orderController.payBill);
 router.route('/bydate/:startDate/:endDate').get(orderController.getOrdersByDate);
 
