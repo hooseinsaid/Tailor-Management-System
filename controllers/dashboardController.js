@@ -51,7 +51,7 @@ exports.defaultDashboard = catchAsync(async (req, res, next) => {
 
   const top5Customers = await generateTop5Customers();
 
-  const top5CustomersByOrder = await generateTop5OrderedCustomers(today, firstDayOftheMonth);
+  const top5CustomersByOrder = await generateTop5OrderedCustomers();
 
   res.status(200).json({
     message: "Sucess",
@@ -301,12 +301,11 @@ const generateTop5ServerdEmployees = async (today, firstDayOftheMonth) => {
   ])
 }
 
-const generateTop5OrderedCustomers = async (today, firstDayOftheMonth) => {
-  
+const generateTop5OrderedCustomers = async () => {
+
   const top5OrderedCustomers = await Order.aggregate([
     {
       $match: {
-        "date": { $lte: new Date(today), $gte: new Date(firstDayOftheMonth) },
         "status": { $ne: "cancelled" },
       }
 
