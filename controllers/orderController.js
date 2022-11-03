@@ -7,7 +7,13 @@ const APIFeatures = require("../utils/apiFeatures")
 const justDate = require("../utils/justDate");
 
 exports.getAllOrders = catchAsync(async (req, res, next) => {
-    const features = new APIFeatures(Order.find({ status: { $ne: "cancelled" } }).populate('customer').populate('servedUser'), req.query).filter().sort().limitFields().paginate()
+    const features = new APIFeatures(Order.find({ status: { $ne: "cancelled" } }).populate({
+        path: 'services',
+        populate: {
+            path: 'menu',
+            model: 'Menu'
+        }
+    }).populate('customer').populate('servedUser'), req.query).filter().sort().limitFields().paginate()
     const orders = await features.query;
     res.status(200).json({
         message: "Sucess",
@@ -141,7 +147,13 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
 });
 
 exports.getOrder = catchAsync(async (req, res, next) => {
-    const order = await Order.findById(req.params.id, { status: "pending" });
+    const order = await Order.findById(req.params.id).populate('customer').populate('servedUser').populate({
+        path: 'services',
+        populate: {
+            path: 'menu',
+            model: 'Menu'
+        }
+    });
     res.status(200).json({
         message: "Sucess",
         data: {
@@ -152,7 +164,7 @@ exports.getOrder = catchAsync(async (req, res, next) => {
 
 exports.createOrder = catchAsync(async (req, res, next) => {
 
-    const createdOrder = await Order.create(req.body);
+    const createdOrder = await Order.create(req.body)
 
     // Send Response
     res.status(201).json({
@@ -228,17 +240,20 @@ exports.payBill = catchAsync(async (req, res, next) => {
 
 exports.invoiceOrderToCustomer = catchAsync(async (req, res, next) => {
     const order = await Order.findById(req.params.id);
+    const user = req.params.user;
 
+    console.log(req.params.id);
+    console.log(req.params.user);
     if (!order) {
         return next(new AppError("no order found with that ID", 404));
     }
 
-    if (order.balance < 0) {
-        return next(new AppError("to invoice order Balace Must be greater than Zero", 400))
-    }
-
     if (order.status == 'invoiced') {
         return next(new AppError("this order allready invoiced", 404));
+    }
+
+    if (order.balance <= 0) {
+        return next(new AppError("to invoice order Balace Must be greater than Zero", 400))
     }
 
     await Transaction.create({
@@ -254,13 +269,18 @@ exports.invoiceOrderToCustomer = catchAsync(async (req, res, next) => {
 
     payments.push({
         description: "Invoiced",
-        amount: order.balance
+        amount: order.balance,
+        user: user,
     })
 
-    await Order.findByIdAndUpdate(req.params.id, { ...order, status: 'invoiced', payments: payments }, {
+    order.status = "invoiced";
+    order.payments = payments;
+
+    await Order.findByIdAndUpdate(req.params.id, order, {
         new: true,
         runValidators: true,
     });
+
 
     res.status(200).json({
         status: "success",

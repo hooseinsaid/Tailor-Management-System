@@ -45,6 +45,11 @@ const serviceSchema = mongoose.Schema( {
       imageUrl: {
             type: String,
             required: true
+      },
+      menu: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Menu",
+            required: true
       }
 });
 

@@ -24,6 +24,7 @@ router
 
 router
     .route('/:id')
+    .get(orderController.getOrder)
     .patch(orderController.updateOrder)
     .delete(orderController.deleteOrder);
 
