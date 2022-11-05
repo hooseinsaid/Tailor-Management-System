@@ -229,8 +229,7 @@ const generateRevenuStats = async (today) => {
   }
 
   return {
-    advancedMoney,
-    ownedMoney,
+    totalOrders: orders.length,
     estimatedPorfit,
     payedMoney
   }

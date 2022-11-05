@@ -47,7 +47,13 @@ exports.getOrdersByDate = catchAsync(async (req, res, next) => {
 });
 
 exports.getPendingOrders = catchAsync(async (req, res, next) => {
-    const features = new APIFeatures(Order.find({ status: "pending" }).populate('customer'), req.query).filter().sort().limitFields().paginate()
+    const features = new APIFeatures(Order.find({ status: "pending" }).populate({
+        path: 'services',
+        populate: {
+            path: 'menu',
+            model: 'Menu'
+        }
+    }).populate('customer'), req.query).filter().sort().limitFields().paginate()
     const orders = await features.query;
     res.status(200).json({
         message: "Sucess",
@@ -59,7 +65,13 @@ exports.getPendingOrders = catchAsync(async (req, res, next) => {
 });
 
 exports.getOnServiceOrders = catchAsync(async (req, res, next) => {
-    const features = new APIFeatures(Order.find({ status: "on-service" }).populate('customer'), req.query).filter().sort().limitFields().paginate()
+    const features = new APIFeatures(Order.find({ status: "on-service" }).populate({
+        path: 'services',
+        populate: {
+            path: 'menu',
+            model: 'Menu'
+        }
+    }).populate('customer'), req.query).filter().sort().limitFields().paginate()
     const orders = await features.query;
     res.status(200).json({
         message: "Sucess",
@@ -71,7 +83,13 @@ exports.getOnServiceOrders = catchAsync(async (req, res, next) => {
 });
 
 exports.getFinishedOrders = catchAsync(async (req, res, next) => {
-    const features = new APIFeatures(Order.find({ status: "finished" }).populate('customer'), req.query).filter().sort().limitFields().paginate()
+    const features = new APIFeatures(Order.find({ status: "finished" }).populate({
+        path: 'services',
+        populate: {
+            path: 'menu',
+            model: 'Menu'
+        }
+    }).populate('customer'), req.query).filter().sort().limitFields().paginate()
     const orders = await features.query;
     res.status(200).json({
         message: "Sucess",
@@ -83,7 +101,13 @@ exports.getFinishedOrders = catchAsync(async (req, res, next) => {
 });
 
 exports.getCancelledOrders = catchAsync(async (req, res, next) => {
-    const features = new APIFeatures(Order.find({ status: "cancelled" }).populate('customer'), req.query).filter().sort().limitFields().paginate()
+    const features = new APIFeatures(Order.find({ status: "cancelled" }).populate({
+        path: 'services',
+        populate: {
+            path: 'menu',
+            model: 'Menu'
+        }
+    }).populate('customer'), req.query).filter().sort().limitFields().paginate()
     const orders = await features.query;
     res.status(200).json({
         message: "Sucess",
@@ -147,7 +171,13 @@ exports.cancelOrder = catchAsync(async (req, res, next) => {
 });
 
 exports.getOrder = catchAsync(async (req, res, next) => {
-    const order = await Order.findById(req.params.id).populate('customer').populate('servedUser').populate({
+    const order = await Order.findById(req.params.id).populate('customer').populate({
+        path: 'services',
+        populate: {
+            path: 'menu',
+            model: 'Menu'
+        }
+    }).populate('servedUser').populate({
         path: 'services',
         populate: {
             path: 'menu',
@@ -339,7 +369,16 @@ exports.finishOrder = catchAsync(async (req, res, next) => {
 });
 
 exports.getOnServiceOrdersByUser = catchAsync(async (req, res, next) => {
-    const features = new APIFeatures(Order.find({ servedUser: req.params.userId, status: "on-service" }).populate('customer'), req.query).filter().sort().limitFields().paginate()
+    const features = new APIFeatures(Order.find({
+        servedUser: req.params.userId,
+        status: "on-service"
+    }).populate({
+        path: 'services',
+        populate: {
+            path: 'menu',
+            model: 'Menu'
+        }
+    }).populate('customer'), req.query).filter().sort().limitFields().paginate()
     const orders = await features.query;
 
     res.status(200).json({
@@ -349,7 +388,7 @@ exports.getOnServiceOrdersByUser = catchAsync(async (req, res, next) => {
             orders,
         },
     });
-})
+});
 
 
 
