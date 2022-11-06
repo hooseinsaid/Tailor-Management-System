@@ -103,7 +103,13 @@ exports.updateCustomer = catchAsync(async (req, res, next) => {
 });
 
 exports.getCustomerOrders = catchAsync(async(req,res,next)=>{
-    const features = new APIFeatures(Order.find({customer: req.params.customerId}).populate("order"), req.query).filter().sort().limitFields().paginate()
+    const features = new APIFeatures(Order.find({customer: req.params.customerId}).populate({
+        path: 'services',
+        populate: {
+            path: 'menu',
+            model: 'Menu'
+        }
+    }), req.query).filter().sort().limitFields().paginate()
     const orders = await features.query;
     res.status(200).json({
         status: "success",

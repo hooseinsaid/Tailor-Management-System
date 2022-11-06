@@ -231,7 +231,7 @@ const generateRevenuStats = async (today) => {
   return {
     totalOrders: orders.length,
     estimatedPorfit,
-    payedMoney
+    advancedMoney
   }
 };
 
