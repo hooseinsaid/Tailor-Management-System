@@ -143,7 +143,7 @@ exports.finishService = catchAsync(async (req, res, next) => {
       const service = await Service.findById(req.params.id);
 
       if (!service) {
-            return next(new AppError("no order found with that ID", 404));
+            return next(new AppError("no service found with that ID", 404));
       }
 
       await Service.findByIdAndUpdate(req.params.id, { ...req.body, status: 'finished' }, {
@@ -169,6 +169,12 @@ exports.getOnServiceServicesByUser = catchAsync(async (req, res, next) => {
             populate: {
                   path: 'customer',
                   model: 'Customer'
+            }
+      }).populate({
+            path: 'order',
+            populate: {
+                  path: 'services',
+                  model: 'Service'
             }
       }).populate('menu'), req.query).filter().sort().limitFields().paginate()
       const services = await features.query;

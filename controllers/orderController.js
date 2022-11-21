@@ -203,20 +203,6 @@ exports.createOrder = catchAsync(async (req, res, next) => {
 
     const createdOrder = await Order.create(req.body);
 
-    // const order = await Order.findById(createdOrder._id).populate('customer').populate({
-    //     path: 'services',
-    //     populate: {
-    //         path: 'menu',
-    //         model: 'Menu'
-    //     }
-    // }).populate('servedUser').populate({
-    //     path: 'services',
-    //     populate: {
-    //         path: 'menu',
-    //         model: 'Menu'
-    //     }
-    // })
-
     // Send Response
     res.status(201).json({
         status: "Success",
@@ -291,11 +277,21 @@ exports.payBill = catchAsync(async (req, res, next) => {
 })
 
 exports.invoiceOrderToCustomer = catchAsync(async (req, res, next) => {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id).populate('services').populate({
+        path: 'services',
+        populate: {
+            path: 'menu',
+            model: 'Menu'
+        }
+    }).populate('customer').populate({
+        path: 'services',
+        populate: {
+            path: 'servedUser',
+            model: 'User'
+        }
+    });
     const user = req.params.user;
 
-    console.log(req.params.id);
-    console.log(req.params.user);
     if (!order) {
         return next(new AppError("no order found with that ID", 404));
     }

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const justDate = require("../utils/justDate");
 
 const opts = {
       toJSON: { virtuals: true }, toObject: { virtuals: true }, timestamps: {
@@ -60,6 +61,11 @@ const serviceSchema = mongoose.Schema({
       order: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Order"
+      },
+      date: {
+            type: Date,
+            required: true,
+            default: justDate(new Date()),
       },
 }, opts);
 

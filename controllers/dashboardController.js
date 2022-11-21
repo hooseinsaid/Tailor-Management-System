@@ -4,6 +4,7 @@ const User = require("../models/userModel");
 const Menu = require("../models/menuModel")
 const catchAsync = require("../utils/catchAsync");
 const Order = require("../models/orderModel");
+const Service = require("../models/serviceModel");
 const APIFeatures = require("../utils/apiFeatures");
 const justDate = require("../utils/justDate");
 
@@ -13,7 +14,19 @@ exports.defaultDashboard = catchAsync(async (req, res, next) => {
 
   // ====== Variables ==============
 
-  const orders = await Order.find({ status: { $ne: "cancelled" } });
+  const orders = await Order.find({ status: { $ne: "cancelled" } }).populate('services').populate({
+    path: 'services',
+    populate: {
+      path: 'menu',
+      model: 'Menu'
+    }
+  }).populate('customer').populate({
+    path: 'services',
+    populate: {
+      path: 'servedUser',
+      model: 'User'
+    }
+  });
   const menus = await Menu.find();
   const customers = await Customer.find();
   const year = new Date().getFullYear();
@@ -215,9 +228,20 @@ const generateDefaultDashboard = async (orders, menus, customers) => {
 }
 
 const generateRevenuStats = async (today) => {
-  const orders = await Order.find({ date: today, status: { $ne: "cancelled" } });
+  const orders = await Order.find({ date: today, status: { $ne: "cancelled" } }).populate('services').populate({
+    path: 'services',
+    populate: {
+      path: 'menu',
+      model: 'Menu'
+    }
+  }).populate('customer').populate({
+    path: 'services',
+    populate: {
+      path: 'servedUser',
+      model: 'User'
+    }
+  });
   const todayPayments = await Order.find({ 'payments.date': today, 'payments.paymentMethod': 'cash' });
-
 
   todayPayments.forEach(order => {
     order.payments.forEach(payment => {
@@ -279,7 +303,7 @@ const generateOrderByStatus = async () => {
 }
 
 const generateTop5ServerdEmployees = async (today, firstDayOftheMonth) => {
-  return await Order.aggregate([
+  return await Service.aggregate([
     {
       $match: {
         "date": { $lte: new Date(today), $gte: new Date(firstDayOftheMonth) },
@@ -299,8 +323,8 @@ const generateTop5ServerdEmployees = async (today, firstDayOftheMonth) => {
         // _id: {servedUser:"$servedUser", status:"$status"},
         username: { $first: "$user.username" },
         name: { $first: "$user.name" },
-        amount: { $sum: "$total" },
-        orders: { $sum: 1 },
+        amount: { $sum: "$subtotal" },
+        services: { $sum: 1 },
       }
     },
 
