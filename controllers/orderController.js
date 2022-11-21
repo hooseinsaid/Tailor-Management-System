@@ -4,16 +4,21 @@ const Transaction = require("../models/transactionModel");
 const User = require("../models/userModel")
 const AppError = require("../utils/appError");
 const APIFeatures = require("../utils/apiFeatures")
-const justDate = require("../utils/justDate");
 
 exports.getAllOrders = catchAsync(async (req, res, next) => {
-    const features = new APIFeatures(Order.find({ status: { $ne: "cancelled" } }).populate({
+    const features = new APIFeatures(Order.find({ status: { $ne: "cancelled" } }).populate('services').populate({
         path: 'services',
         populate: {
             path: 'menu',
             model: 'Menu'
         }
-    }).populate('customer').populate('servedUser'), req.query).filter().sort().limitFields().paginate()
+    }).populate('customer').populate({
+        path: 'services',
+        populate: {
+            path: 'servedUser',
+            model: 'User'
+        }
+    }), req.query).filter().sort().limitFields().paginate()
     const orders = await features.query;
     res.status(200).json({
         message: "Sucess",
@@ -53,8 +58,10 @@ exports.getPendingOrders = catchAsync(async (req, res, next) => {
             path: 'menu',
             model: 'Menu'
         }
-    }).populate('customer'), req.query).filter().sort().limitFields().paginate()
+    }).populate('customer'), req.query).filter().sort().limitFields().paginate();
+
     const orders = await features.query;
+
     res.status(200).json({
         message: "Sucess",
         count: orders.length,
@@ -194,7 +201,21 @@ exports.getOrder = catchAsync(async (req, res, next) => {
 
 exports.createOrder = catchAsync(async (req, res, next) => {
 
-    const createdOrder = await Order.create(req.body)
+    const createdOrder = await Order.create(req.body);
+
+    // const order = await Order.findById(createdOrder._id).populate('customer').populate({
+    //     path: 'services',
+    //     populate: {
+    //         path: 'menu',
+    //         model: 'Menu'
+    //     }
+    // }).populate('servedUser').populate({
+    //     path: 'services',
+    //     populate: {
+    //         path: 'menu',
+    //         model: 'Menu'
+    //     }
+    // })
 
     // Send Response
     res.status(201).json({
@@ -254,6 +275,7 @@ exports.payBill = catchAsync(async (req, res, next) => {
 
     payments.push({
         description: "Payment",
+        paymentMethod: 'cash',
         amount: amount
     })
 
@@ -301,6 +323,7 @@ exports.invoiceOrderToCustomer = catchAsync(async (req, res, next) => {
         description: "Invoiced",
         amount: order.balance,
         user: user,
+        paymentMethod: 'invoice',
     })
 
     order.status = "invoiced";
@@ -320,32 +343,6 @@ exports.invoiceOrderToCustomer = catchAsync(async (req, res, next) => {
     });
 });
 
-exports.assignOrderToUser = catchAsync(async (req, res, next) => {
-    const order = await Order.findById(req.params.orderId);
-    const user = await User.findById(req.params.userId);
-
-
-    if (!order) {
-        return next(new AppError("no order found with that ID", 404));
-    }
-    if (!user) {
-        return next(new AppError("no user found with that ID", 404));
-    }
-
-    if (order.status !== 'pending') {
-        return next(new AppError("This is not Pending Order"))
-    }
-
-    await Order.findByIdAndUpdate(req.params.orderId, { servedUser: user._id, status: 'on-service' });
-
-
-    res.status(200).json({
-        status: "success",
-        data: {
-            message: `Order successfully assigned to ${user.username}`
-        },
-    });
-});
 
 exports.finishOrder = catchAsync(async (req, res, next) => {
     const order = await Order.findById(req.params.id);

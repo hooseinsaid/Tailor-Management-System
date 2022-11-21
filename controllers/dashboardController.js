@@ -4,7 +4,8 @@ const User = require("../models/userModel");
 const Menu = require("../models/menuModel")
 const catchAsync = require("../utils/catchAsync");
 const Order = require("../models/orderModel");
-const APIFeatures = require("../utils/apiFeatures")
+const APIFeatures = require("../utils/apiFeatures");
+const justDate = require("../utils/justDate");
 
 
 exports.defaultDashboard = catchAsync(async (req, res, next) => {
@@ -215,6 +216,17 @@ const generateDefaultDashboard = async (orders, menus, customers) => {
 
 const generateRevenuStats = async (today) => {
   const orders = await Order.find({ date: today, status: { $ne: "cancelled" } });
+  const todayPayments = await Order.find({ 'payments.date': today, 'payments.paymentMethod': 'cash' });
+
+
+  todayPayments.forEach(order => {
+    order.payments.forEach(payment => {
+      if (justDate(payment.date).toISOString() == justDate(today).toISOString()) {
+        console.log(payment.amount)
+      }
+    });
+  });
+
   var advancedMoney = 0;
   var ownedMoney = 0;
   var payedMoney = 0;

@@ -6,6 +6,7 @@ const userRoutes = require("./routes/userRoutes");
 const employeeRoutes = require("./routes/employeeRoutes")
 const companyInfoRoutes = require("./routes/companyInfoRoutes");
 const orderRoutes = require("./routes/orderRoutes")
+const servicesRoutes = require("./routes/serviceRoutes")
 const customerRoutes = require("./routes/customerRoutes");
 const transactionRoutes = require("./routes/transactionRoutes")
 const styleRoutes = require("./routes/styleRoutes");
@@ -33,6 +34,7 @@ app.use('/api/v1/companyInfo', companyInfoRoutes)
 app.use('/api/v1/employee-titles', employeeTitleRoutes);
 app.use('/api/v1/customers', customerRoutes);
 app.use("/api/v1/orders", orderRoutes);
+app.use("/api/v1/services", servicesRoutes);
 app.use("/api/v1/transactions", transactionRoutes)
 app.use("/api/v1/styles", styleRoutes);
 app.use("/api/v1/menus", menuRoutes)

@@ -9,49 +9,6 @@ const opts = {
       }
 }
 
-const serviceSchema = mongoose.Schema( {
-      type: {
-            type: String,
-            required: true
-      },
-      quantity: {
-            type: Number,
-            required: true
-      },
-      unitPrice: {
-            type: Number,
-            required: true
-      },
-      subtotal: {
-            type: Number,
-            required: true,
-            default: function () {
-                  return this.quantity * this.unitPrice
-            }
-      },
-      sizes: [
-            {
-                  title: {
-                        type: String,
-                        
-                  },
-                  value: {
-                        type: Number,
-                  
-                  }
-            }
-      ],
-      styles: [],
-      imageUrl: {
-            type: String,
-            required: true
-      },
-      menu: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Menu",
-            required: true
-      }
-});
 
 const orderSchema = mongoose.Schema({
       orderNumber: {
@@ -60,24 +17,17 @@ const orderSchema = mongoose.Schema({
             required: true
       },
       services: [
-            serviceSchema
+            {
+                  type: mongoose.Schema.Types.ObjectId,
+                  ref: "Service"
+            }
       ],
       customer: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Customer",
             required: true
       },
-      total: {
-            type: Number,
-            required: true,
-            default: function () {
-                  let amount = 0;
-                  this.services.forEach(service => {
-                        amount += service.subtotal
-                  });
-                  return amount;
-            }
-      },
+
       advance: {
             type: Number,
             required: true,
@@ -91,7 +41,7 @@ const orderSchema = mongoose.Schema({
             type: Date,
             required: true,
             default: justDate(new Date()),
-        },
+      },
       status: {
             type: String,
             lowercase: true,
@@ -101,10 +51,6 @@ const orderSchema = mongoose.Schema({
       user: {
             type: String,
             // required: true
-      },
-      servedUser: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User"
       },
       payments: [
             {
@@ -123,6 +69,13 @@ const orderSchema = mongoose.Schema({
                         type: Date,
                         required: true,
                         default: justDate(new Date()),
+                  },
+                  paymentMethod: {
+                        type: String,
+                        required: true,
+                        lowercase: true,
+                        default: "cash",
+                        enum: ['cash', 'invoice']
                   }
             }
       ]
@@ -141,6 +94,14 @@ orderSchema.virtual('Ref').get(function () {
       return `ORD-${number}`;
 });
 
+// create a virtual property `balance` that's computed from `total` & `payments`
+orderSchema.virtual('total').get(function () {
+      let amount = 0;
+      this.services.forEach(service => {
+            amount += service.subtotal
+      });
+      return amount;
+});
 // create a virtual property `balance` that's computed from `total` & `payments`
 orderSchema.virtual('balance').get(function () {
       let price = this.total - this.advance;

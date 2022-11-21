@@ -1,11 +1,10 @@
 const express = require('express');
 const orderController = require('../controllers/orderController');
-
+const serviceController = require('../controllers/serviceController');
 const router = express.Router();
 
 
 router.route('/invoice-order-to-customer/:id/:user').post(orderController.invoiceOrderToCustomer);
-router.route('/assign-order-to-user/:orderId/:userId').post(orderController.assignOrderToUser);
 router.route('/finish-order/:id').post(orderController.finishOrder);
 router.route('/take-order/:id').post(orderController.takeOrder);
 router.route('/cancel-order/:id').post(orderController.cancelOrder);
@@ -20,7 +19,7 @@ router.route('/bydate/:startDate/:endDate').get(orderController.getOrdersByDate)
 router
     .route('/')
     .get(orderController.getAllOrders)
-    .post(orderController.createOrder);
+    .post(serviceController.createServices,orderController.createOrder);
 
 router
     .route('/:id')
