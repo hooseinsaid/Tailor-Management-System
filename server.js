@@ -21,5 +21,5 @@ connect();
 
 
 // listen Server
-const port = process.env.PORT || 80;
-app.listen(port, console.log(`Listening on port ${port}...`));
+const port = 3000;
+app.listen(port, '127.0.0.1');

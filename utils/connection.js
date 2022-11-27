@@ -18,6 +18,7 @@ async function connection() {
     try {
 
         // if all well, connect to mongdb instance with user and password
+        mongoose.set('useUnifiedTopology', true);
         await mongoose.connect(url, { useFindAndModify: false })
         response = {
             error: false,
